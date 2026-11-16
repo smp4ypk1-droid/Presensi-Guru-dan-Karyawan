@@ -1,6 +1,7 @@
 // Service Worker — Presensi SMP 1 YPK
 // Naikkan VERSION setiap kali Anda mengubah file aplikasi agar HP mengambil versi baru.
-const VERSION = 'presensi-v2.0.0';
+const VERSION = 'presensi-v2.1.0';
+const CDN_CACHE = 'presensi-cdn-v1'; // model wajah — TIDAK ikut dihapus saat update
 const APP_SHELL = ['./', './index.html', './app.js', './config.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png'];
 
@@ -10,7 +11,7 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== CDN_CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
@@ -22,7 +23,7 @@ self.addEventListener('fetch', (e) => {
 
   // Model wajah & library CDN: cache-first (besar dan jarang berubah)
   if (url.hostname === 'cdn.jsdelivr.net') {
-    e.respondWith(caches.open(VERSION + '-cdn').then(async c => {
+    e.respondWith(caches.open(CDN_CACHE).then(async c => {
       const hit = await c.match(req);
       if (hit) return hit;
       const res = await fetch(req);
